@@ -2,6 +2,8 @@ require('dotenv').config();
 require('./config/database').connect();
 const express = require('express');
 const User = require('./model/user');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -36,16 +38,16 @@ app.post('/register', async (req,res) => {
         const user = await User.create({
             first_name,
             last_name,
-            email: email.toLowercase(), // sanitize: convert email to lowercase
+            email: email.toLowerCase(), // sanitize: convert email to lowercase
             password: encryptedPass
         });
 
         // Create token
-        const token = jwt.token(
+        const token = jwt.sign(
             { user_id: user._id, email },
             process.env.TOKEN_KEY,
             {
-                expiresIn: "2h"
+                expiresIn: "1m"
             }
         );
         // save user token
