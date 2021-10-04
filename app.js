@@ -47,7 +47,7 @@ app.post('/register', async (req,res) => {
             { user_id: user._id, email },
             process.env.TOKEN_KEY,
             {
-                expiresIn: "1m"
+                expiresIn: "2h"
             }
         );
         // save user token
@@ -65,9 +65,46 @@ app.post('/register', async (req,res) => {
 });
 
 // Login here
-app.post('/login',(req,res) => {
+app.post('/login',async (req,res) => {
+    // Our login logic starts here
+    try{
+        // Get user input
+        const { email, password } = req.body;
 
-})
+        // Validate User Input
+        if(!(email && password)){
+            res.status(400).send("All Inputs are required!");
+        }
+
+        // Validate if User exist in our database
+        const user = await User.findOne({email});
+
+        if(user && (await bcrypt.compare(password,user.password))){
+            // create token
+            const token = jwt.sign(
+                { user_id: user._id },
+                process.env.TOKEN_KEY,
+                {
+                    expiresIn: "2h"
+                }
+            );
+
+            // save token
+            user.token = token;
+
+            // user
+            res.status(200).json(user);
+    
+        }
+        res.status(400).send("Invalid Credentials!");
+
+    }
+    catch(err){
+        console.log(err);
+    }
+
+    // Our login logic ends here
+});
 
 
 module.exports = app;
